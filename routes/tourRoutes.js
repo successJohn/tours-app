@@ -3,6 +3,6 @@ const tourController = require("./../controllers/tourController");
 const router = express.Router();
 
 router.route("/")
-.get(tourController)
+.post(tourController.createTour);
 
 module.exports = router;
