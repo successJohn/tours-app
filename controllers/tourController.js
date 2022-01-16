@@ -22,7 +22,7 @@ exports.createTour = async (req, res) =>{
 
 exports.getAllTours = async(req, res) =>{
     try{
-       // FILTERING
+       //1 FILTERING
 
         const queryObj = {...req.query};
          
@@ -33,12 +33,12 @@ exports.getAllTours = async(req, res) =>{
         // appending operator "$" to selectors gt, lt, gte and lte
 
         queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, match => `$${match}`);
-        
+
 
         let data = Tour.find(JSON.parse(queryStr));
 
 
-        // SORTING
+        //2 SORTING
 
         if(req.query.sort){
             const sortBy = req.query.sort.split(",").join(" ");
@@ -46,6 +46,14 @@ exports.getAllTours = async(req, res) =>{
             data = data.sort(sortBy);
         }else{
             data.sort("-createdAt");
+        }
+        //3. FIELD LIMITING/ PROJECTING
+        
+        if(req.query.fields){
+            const fields = req.query.fields.split(",").join(" ");
+            data= data.select(fields)
+        }else{
+            data = data.select("-__v")
         }
          // Execute query
         const tours = await data;
