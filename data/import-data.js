@@ -27,7 +27,7 @@ const importData = async() =>{
        
     } catch (error) {
         console.log(error);
-    }
+    } 
     process.exit();
 }
 

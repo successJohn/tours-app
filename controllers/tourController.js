@@ -1,3 +1,4 @@
+const express = require("express");
 const Tour = require("./../models/tourModel");
 
 exports.createTour = async (req, res) =>{
@@ -17,31 +18,37 @@ exports.createTour = async (req, res) =>{
             msg: err
         })
     }
-}
+} 
 
 exports.getAllTours = async(req, res) =>{
     try{
-        const allTours = Tour.find({}, function(err, tours){
-            if(err){
-                res.send(err);
-            }
-       
-            res.status(201).json({
-                status: "success",
-            
-                data: {
-                    tour: tours
-                }
-            })
-    })
-    }catch(err){
+        //1. Filtering
+        const queryObj = {...req.query};
+
+        //2.advanced filtering for comparison query selectors
+
+        let queryStr = JSON.stringify(queryObj);
+        // appending operator "$" to selectors gt, lt, gte and lte
+
+        queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, match => `$${match}`);
+
+        const query = Tour.find(JSON.parse(queryStr));
+        
+        const tours = await query;
+        res.status(201).json({
+                   status: "success",
+                   length: tours.length,
+                   data: {
+                       tours
+                   }
+               })
+    } catch(err){
         res.status(400).json({
             status: "fail",
             msg: err
         })
     }
 }
-
 
 exports.getTour = async (req, res)=>{
  try {
