@@ -22,24 +22,40 @@ exports.createTour = async (req, res) =>{
 
 exports.getAllTours = async(req, res) =>{
     try{
-        //1. Filtering
-        const queryObj = {...req.query};
+       // FILTERING
 
-        //2.advanced filtering for comparison query selectors
+        const queryObj = {...req.query};
+         
+        //1b.advanced filtering for comparison query selectors
 
         let queryStr = JSON.stringify(queryObj);
+
         // appending operator "$" to selectors gt, lt, gte and lte
 
         queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, match => `$${match}`);
-
-        const query = Tour.find(JSON.parse(queryStr));
         
-        const tours = await query;
-        res.status(201).json({
+
+        let data = Tour.find(JSON.parse(queryStr));
+
+
+        // SORTING
+
+        if(req.query.sort){
+            const sortBy = req.query.sort.split(",").join(" ");
+            console.log(sortBy);
+            data = data.sort(sortBy);
+        }else{
+            data.sort("-createdAt");
+        }
+         // Execute query
+        const tours = await data;
+
+        // send response
+        res.status(200).json({
                    status: "success",
                    length: tours.length,
                    data: {
-                       tours
+                       tours 
                    }
                })
     } catch(err){
@@ -62,7 +78,7 @@ exports.getTour = async (req, res)=>{
     } catch (error) {
             res.status(400).json({
             status: "fail",
-            msg: err
+            msg: error
         })
     }
 } 
