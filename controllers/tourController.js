@@ -44,9 +44,11 @@ exports.getAllTours = async(req, res) =>{
             const sortBy = req.query.sort.split(",").join(" ");
             console.log(sortBy);
             data = data.sort(sortBy);
+        
         }else{
             data.sort("-createdAt");
         }
+
         //3. FIELD LIMITING/ PROJECTING
         
         if(req.query.fields){
@@ -55,7 +57,17 @@ exports.getAllTours = async(req, res) =>{
         }else{
             data = data.select("-__v")
         }
-         // Execute query
+         
+        //4. PAGINATION
+        const page = req.query.page * 1 || 1;        
+        const limit = req.query.limit * 1 || 100;
+        const skip = (page - 1 )* limit;
+        
+        data = data.skip(skip).limit(limit);
+        
+        
+        
+        // Execute query
         const tours = await data;
 
         // send response
