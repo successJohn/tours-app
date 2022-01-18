@@ -1,6 +1,6 @@
 const express = require("express");
 const Tour = require("./../models/tourModel");
-
+const APIFeatures = require("./../utils/apiFeatures");
 
 exports.aliasTopTours = (req,res,next)=>{
     req.query.limit = "5";
@@ -8,6 +8,7 @@ exports.aliasTopTours = (req,res,next)=>{
     req.query.fields = "name,price,ratingsAverage,summary,difficulty"
     next();
 }
+
 exports.createTour = async (req, res) =>{
     try{
         const newTour = await Tour.create(req.body);
@@ -28,55 +29,14 @@ exports.createTour = async (req, res) =>{
 } 
 
 exports.getAllTours = async(req, res) =>{
-    try{
-       //1 FILTERING
-
-        const queryObj = {...req.query};
-         
-        //1b.advanced filtering for comparison query selectors
-
-        let queryStr = JSON.stringify(queryObj);
-
-        // appending operator "$" to selectors gt, lt, gte and lte
-
-        queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, match => `$${match}`);
-
-
-        let data = Tour.find(JSON.parse(queryStr));
-
-
-        //2 SORTING
-
-        if(req.query.sort){
-            const sortBy = req.query.sort.split(",").join(" ");
-            console.log(sortBy);
-            data = data.sort(sortBy);
-        
-        }else{
-            data.sort("-createdAt");
-        }
-
-        //3. FIELD LIMITING/ PROJECTING
-        
-        if(req.query.fields){
-            const fields = req.query.fields.split(",").join(" ");
-            data= data.select(fields)
-        }else{
-            data = data.select("-__v")
-        }
-         
-        //4. PAGINATION
-        const page = req.query.page * 1 || 1;        
-        const limit = req.query.limit * 1 || 100;
-        const skip = (page - 1 )* limit;
-        
-        data = data.skip(skip).limit(limit);
-        
-        
-        
-        // Execute query
-        const tours = await data;
-
+    try{      
+        const features = new APIFeatures(Tour.find(), req.query)
+        .filter()
+        .sort()
+        .limitFields()
+        .paginate();
+       
+        const tours = await features.query;
         // send response
         res.status(200).json({
                    status: "success",
